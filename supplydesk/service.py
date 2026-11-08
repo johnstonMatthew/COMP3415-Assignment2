@@ -9,6 +9,7 @@ STUDENT_DISCOUNT_THRESHOLD = 5000 # In Cents
 FREE_DELIVERY_THRESHOLD = 10000 # In Cents
 
 DELIVERY_FEE = 600
+EXPRESS_FEE = 1200
 STUDENT_DISCOUNT = 10
 ROUNDING_ADJUSTMENT = 50
 PERCENTAGE_DIVISOR = 100
@@ -28,6 +29,13 @@ class OrderService:
     def calculate_delivery_fee(self, fulfillment, subtotal, discount):
         if fulfillment == "delivery" and subtotal - discount < FREE_DELIVERY_THRESHOLD:
             return DELIVERY_FEE
+        elif fulfillment == "express":
+            return EXPRESS_FEE
+        return 0
+
+    def calculate_express_fee(self, fulfillment):
+        if fulfillment == "express":
+            return EXPRESS_FEE
         return 0
 
     def validate_quantity(self, min_quantity, max_quantity, quantity, product):
@@ -39,12 +47,12 @@ class OrderService:
     def validate_customer_and_fulfillment(self, customer_type, items, fulfillment):
         if customer_type not in ("regular", "student"):
             raise ValueError("Customer type must be regular or student.")
-        if fulfillment not in ("pickup", "delivery"):
-            raise ValueError("Fulfillment must be pickup or delivery.")
+        if fulfillment not in ("pickup", "delivery", "express"):
+            raise ValueError("Fulfillment must be pickup, delivery or express.")
         if not isinstance(items, list) or not items:
             raise ValueError("An order must contain at least one item.")
 
-    def calculate_and_return_order(self, customer_type, items, fulfillment="pickupW"):
+    def calculate_and_return_order(self, customer_type, items, fulfillment="pickup"):
         state = self.store.load()
 
         self.validate_customer_and_fulfillment(customer_type, items, fulfillment)

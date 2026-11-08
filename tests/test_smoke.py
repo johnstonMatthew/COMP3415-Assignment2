@@ -98,8 +98,45 @@ class OrderSmokeTests(unittest.TestCase):
 
         self.assertEqual(self.service.catalog(), before)
 
+    def test_regular_express_quote(self):
+        quote = self.service.quote("regular", [{"product_id": "hoodie", "quantity": 2}], "express")
 
+        self.assertEqual(quote["discount_cents"], 0)
+        self.assertEqual(quote["delivery_cents"], 1200)
+        self.assertEqual(quote["total_cents"], 9200)
 
+    def test_student_express_quote(self):
+        quote = self.service.quote("student", [{"product_id": "hoodie", "quantity": 2}], "express")
+                
+        self.assertEqual(quote["discount_cents"], 800)
+        self.assertEqual(quote["delivery_cents"], 1200)
+        self.assertEqual(quote["total_cents"], 8400)
+
+    def test_regular_express_order(self):
+        order = self.service.place_order("regular", [{"product_id": "hoodie", "quantity": 2}], "express") 
+
+        self.assertEqual(order["status"], "placed")
+        self.assertEqual(order["order_id"], "ORD-0001")
+        self.assertEqual(order["subtotal_cents"], 8000)
+        self.assertEqual(order["delivery_cents"], 1200)
+        self.assertEqual(order["total_cents"], 9200)
+
+    def test_student_express_order(self):
+        order = self.service.place_order("student", [{ "product_id": "hoodie", "quantity": 2 }], "express") 
+
+        self.assertEqual(order["status"], "placed")
+        self.assertEqual(order["order_id"], "ORD-0001")
+        self.assertEqual(order["subtotal_cents"], 8000)
+        self.assertEqual(order["discount_cents"], 800)
+        self.assertEqual(order["delivery_cents"], 1200)
+        self.assertEqual(order["total_cents"], 8400)
+
+    def test_standard_fee_always_applied(self):
+        order_above_delivery_threshold= self.service.place_order("regular", [{ "product_id": "hoodie", "quantity": 3 }], "delivery") 
+        order_below_delivery_threshold = self.service.place_order("regular", [{ "product_id": "mug", "quantity": 1 }], "delivery")
+
+        self.assertEqual(order_above_delivery_threshold["delivery_cents"], 0)
+        self.assertEqual(order_below_delivery_threshold["delivery_cents"], 600)
 
 if __name__ == "__main__":
     unittest.main()
